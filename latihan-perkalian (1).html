@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Latihan Perkalian 1–20</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F7F3EA;
+    --paper-edge: #EFE9D8;
+    --ink: #22303C;
+    --ink-soft: #5B6670;
+    --rule: #DCD2AC;
+    --correct: #3F7D57;
+    --correct-bg: #E7F0E9;
+    --wrong: #B23A2E;
+    --wrong-bg: #F7E8E5;
+    --gold: #C08A1E;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--paper-edge);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 90px 16px 32px;
+    font-family:'Inter', sans-serif;
+    color: var(--ink);
+  }
+
+  .page-title{
+    position:fixed;
+    top:28px;
+    left:50%;
+    transform:translateX(-50%);
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:0.02em;
+    color: var(--ink-soft);
+  }
+
+  .tabs{
+    position:fixed;
+    top:56px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:4px;
+    background: var(--paper-edge);
+    border: 1.5px solid var(--rule);
+    padding:4px;
+    border-radius:8px;
+  }
+  .tab-btn{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color: var(--ink-soft);
+    background:transparent;
+    border:none;
+    padding: 8px 16px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .notebook{
+    position:relative;
+    width:100%;
+    max-width:460px;
+    background: var(--paper);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(34,48,60,0.08), 0 12px 32px rgba(34,48,60,0.10);
+    padding: 48px 40px 40px 56px;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 43px,
+        var(--rule) 43px,
+        var(--rule) 44px
+    );
+    background-position: 0 130px;
+  }
+
+  .notebook.table-mode{
+    max-width: 640px;
+    padding: 48px 32px 36px 56px;
+  }
+
+  .rings{
+    position:absolute;
+    top:0; left:22px;
+    height:100%;
+    width:2px;
+  }
+  .rings::before{
+    content:"";
+    position:absolute;
+    top:24px; bottom:24px; left:0;
+    width:2px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 22px,
+      var(--rule) 22px, var(--rule) 24px
+    );
+  }
+  .ring{
+    position:absolute;
+    left:-9px;
+    width:18px; height:18px;
+    border-radius:50%;
+    border: 2.5px solid var(--paper-edge);
+    background: var(--paper);
+    box-shadow: inset 0 0 0 2.5px var(--paper);
+  }
+
+  header{ margin-bottom: 30px; }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 26px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle{ font-size:13px; color: var(--ink-soft); margin:0; }
+
+  .hidden{ display:none !important; }
+
+  .progress-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:12.5px;
+    color: var(--ink-soft);
+    margin-bottom:8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-track{
+    height:5px;
+    background: var(--rule);
+    border-radius:3px;
+    overflow:hidden;
+    margin-bottom:38px;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background: var(--gold);
+    border-radius:3px;
+    transition: width 0.35s ease;
+  }
+
+  .quiz-area{
+    min-height: 210px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .equation{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size: 40px;
+    letter-spacing: 0.01em;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom: 26px;
+  }
+  .equation .op{ color: var(--ink-soft); font-weight:500; }
+
+  .answer-input{
+    width: 110px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 28px;
+    font-weight:600;
+    text-align:center;
+    background:transparent;
+    border:none;
+    border-bottom: 2.5px solid var(--ink);
+    padding: 2px 4px 8px;
+    color: var(--ink);
+    outline:none;
+  }
+  .answer-input.correct{ border-color: var(--correct); color: var(--correct); }
+  .answer-input.wrong{ border-color: var(--wrong); color: var(--wrong); }
+  .answer-input:disabled{ opacity: 1; }
+
+  .mark-wrap{ width:44px; height:44px; margin-top:14px; }
+  .mark-wrap svg path{
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: draw 0.35s ease forwards;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+
+  .feedback-text{
+    margin-top:10px;
+    font-size:13.5px;
+    color: var(--ink-soft);
+    min-height: 18px;
+  }
+  .feedback-text.wrong{ color: var(--wrong); }
+  .feedback-text.correct{ color: var(--correct); }
+
+  .actions{ margin-top:26px; display:flex; justify-content:center; gap:10px; }
+
+  button.primary{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color: var(--paper);
+    background: var(--ink);
+    border:none;
+    padding: 11px 26px;
+    border-radius: 5px;
+    cursor:pointer;
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  button.primary:hover{ background:#374857; }
+  button.primary:active{ transform: translateY(1px); }
+  button.primary:disabled{ background: var(--rule); cursor:not-allowed; }
+
+  button.ghost{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color: var(--ink-soft);
+    background:transparent;
+    border: 1.5px solid var(--rule);
+    padding: 10px 18px;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  button.ghost:hover{ border-color: var(--ink-soft); color: var(--ink); }
+
+  .done-screen{ display:none; text-align:center; }
+  .done-screen .big-score{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 52px;
+    margin: 6px 0 2px;
+  }
+  .done-screen .score-label{ font-size:13px; color: var(--ink-soft); margin-bottom: 28px; }
+
+  .table-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .score-pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    font-weight:600;
+    color: var(--ink-soft);
+    min-height:18px;
+  }
+  .score-pill.show-correct{ color: var(--correct); }
+
+  .table-scroll{ overflow-x:auto; padding-bottom:6px; margin: 0 -4px 6px; }
+
+  table.mult-table{ border-collapse: collapse; margin: 0 auto; }
+  table.mult-table th{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:11px;
+    color: var(--ink-soft);
+    padding: 4px 2px;
+    text-align:center;
+    min-width: 30px;
+  }
+  table.mult-table thead th{ border-bottom: 1.5px solid var(--rule); }
+  table.mult-table tbody th{ border-right: 1.5px solid var(--rule); }
+  table.mult-table th.corner{ font-family:'IBM Plex Mono', monospace; color: var(--ink); }
+
+  table.mult-table td{ padding: 1px; text-align:center; position:relative; }
+  table.mult-table td.cell input{
+    width: 30px;
+    height: 26px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight:600;
+    text-align:center;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--rule);
+    color: var(--ink);
+    outline:none;
+    padding:0;
+  }
+  table.mult-table td.cell input:focus{ border-bottom-color: var(--ink); }
+  table.mult-table td.cell.correct input{
+    background: var(--correct-bg);
+    border-bottom-color: var(--correct);
+    color: var(--correct);
+  }
+  table.mult-table td.cell.wrong input{
+    background: var(--wrong-bg);
+    border-bottom-color: var(--wrong);
+    color: var(--wrong);
+  }
+  .correct-hint{
+    display:block;
+    font-size:8.5px;
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--correct);
+    line-height:1;
+    margin-top:1px;
+  }
+
+  .table-footer{ display:flex; justify-content:center; gap:10px; margin-top: 22px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .mark-wrap svg path{ animation:none; stroke-dashoffset:0; }
+    .progress-fill{ transition:none; }
+  }
+
+  @media (max-width: 480px){
+    .notebook{ padding: 40px 24px 32px 40px; }
+    .notebook.table-mode{ padding: 40px 14px 28px 40px; }
+    .equation{ font-size: 32px; }
+    table.mult-table td.cell input{ width:26px; height:24px; font-size:10.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">Buku Latihan Perkalian</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabQuizBtn">Perkalian</button>
+  <button class="tab-btn" id="tabTableBtn">Perkalian Tabel</button>
+</div>
+
+<div class="notebook" id="viewQuiz">
+  <div class="rings" aria-hidden="true">
+    <div class="ring" style="top:36px;"></div>
+    <div class="ring" style="top:50%; transform:translateY(-50%);"></div>
+    <div class="ring" style="bottom:36px;"></div>
+  </div>
+
+  <header>
+    <h1>Latihan Perkalian</h1>
+    <p class="subtitle">Berurutan dari 1 × 1 sampai 20 × 20</p>
+  </header>
+
+  <div id="quizScreen">
+    <div class="progress-row">
+      <span id="progressLabel">Soal 1 dari 400</span>
+      <span id="scoreLabel">Benar: 0</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div class="quiz-area">
+      <div class="equation">
+        <span id="numA">1</span>
+        <span class="op">×</span>
+        <span id="numB">1</span>
+        <span class="op">=</span>
+        <input type="text" inputmode="numeric" autocomplete="off" class="answer-input" id="answerInput" maxlength="4">
+      </div>
+      <div class="mark-wrap" id="markWrap"></div>
+      <div class="feedback-text" id="feedbackText">&nbsp;</div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="actionBtn">Periksa</button>
+      <button class="ghost" id="skipBtn">Lewati</button>
+    </div>
+  </div>
+
+  <div class="done-screen" id="doneScreen">
+    <p class="subtitle">Selesai! Semua 400 soal sudah dikerjakan.</p>
+    <div class="big-score" id="finalScore">0 / 400</div>
+    <p class="score-label">jawaban benar</p>
+    <button class="primary" id="restartBtn">Ulangi dari Awal</button>
+  </div>
+</div>
+
+<div class="notebook table-mode hidden" id="viewTable">
+  <div class="rings" aria-hidden="true">
+    <div class="ring" style="top:36px;"></div>
+    <div class="ring" style="top:50%; transform:translateY(-50%);"></div>
+    <div class="ring" style="bottom:36px;"></div>
+  </div>
+
+  <header>
+    <h1>Perkalian Tabel</h1>
+    <p class="subtitle">Isi seluruh tabel, lalu tekan "Periksa" untuk melihat skor dan koreksi</p>
+  </header>
+
+  <div class="table-toolbar">
+    <button class="primary" id="checkTableBtn">Periksa</button>
+    <span class="score-pill" id="tableScorePill">&nbsp;</span>
+  </div>
+
+  <div class="table-scroll">
+    <table class="mult-table" id="multTable" aria-label="Tabel perkalian 1 sampai 20"></table>
+  </div>
+
+  <div class="table-footer">
+    <button class="ghost" id="resetTableBtn">Ulangi Tabel</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const tabQuizBtn = document.getElementById('tabQuizBtn');
+  const tabTableBtn = document.getElementById('tabTableBtn');
+  const viewQuiz = document.getElementById('viewQuiz');
+  const viewTable = document.getElementById('viewTable');
+
+  function showQuiz(){
+    tabQuizBtn.classList.add('active');
+    tabTableBtn.classList.remove('active');
+    viewQuiz.classList.remove('hidden');
+    viewTable.classList.add('hidden');
+  }
+  function showTable(){
+    tabTableBtn.classList.add('active');
+    tabQuizBtn.classList.remove('active');
+    viewTable.classList.remove('hidden');
+    viewQuiz.classList.add('hidden');
+  }
+  tabQuizBtn.addEventListener('click', showQuiz);
+  tabTableBtn.addEventListener('click', showTable);
+
+  const TOTAL_MAX = 20;
+  const problems = [];
+  for(let a=1; a<=TOTAL_MAX; a++){
+    for(let b=1; b<=TOTAL_MAX; b++){ problems.push({a, b}); }
+  }
+  const TOTAL = problems.length;
+
+  let index = 0;
+  let score = 0;
+  let awaitingNext = false;
+
+  const numA = document.getElementById('numA');
+  const numB = document.getElementById('numB');
+  const input = document.getElementById('answerInput');
+  const actionBtn = document.getElementById('actionBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const progressLabel = document.getElementById('progressLabel');
+  const scoreLabel = document.getElementById('scoreLabel');
+  const progressFill = document.getElementById('progressFill');
+  const feedbackText = document.getElementById('feedbackText');
+  const markWrap = document.getElementById('markWrap');
+  const quizScreen = document.getElementById('quizScreen');
+  const doneScreen = document.getElementById('doneScreen');
+  const finalScore = document.getElementById('finalScore');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const checkSVG = '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M10 22 L19 31 L34 12" fill="none" stroke="var(--correct)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const crossSVG = '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M12 12 L32 32 M32 12 L12 32" fill="none" stroke="var(--wrong)" stroke-width="4" stroke-linecap="round"/></svg>';
+
+  function renderProblem(){
+    const p = problems[index];
+    numA.textContent = p.a;
+    numB.textContent = p.b;
+    input.value = '';
+    input.className = 'answer-input';
+    input.disabled = false;
+    markWrap.innerHTML = '';
+    feedbackText.textContent = '\u00A0';
+    feedbackText.className = 'feedback-text';
+    actionBtn.textContent = 'Periksa';
+    actionBtn.disabled = false;
+    awaitingNext = false;
+    progressLabel.textContent = 'Soal ' + (index + 1) + ' dari ' + TOTAL;
+    scoreLabel.textContent = 'Benar: ' + score;
+    progressFill.style.width = ((index) / TOTAL * 100) + '%';
+    input.focus();
+  }
+
+  function showDone(){
+    quizScreen.style.display = 'none';
+    doneScreen.style.display = 'block';
+    finalScore.textContent = score + ' / ' + TOTAL;
+  }
+
+  function checkAnswer(){
+    if(awaitingNext) return;
+    const p = problems[index];
+    const correctAnswer = p.a * p.b;
+    const userVal = parseInt(input.value, 10);
+    if(isNaN(userVal)){ input.focus(); return; }
+
+    const isCorrect = userVal === correctAnswer;
+    input.disabled = true;
+    awaitingNext = true;
+
+    if(isCorrect){
+      score++;
+      input.className = 'answer-input correct';
+      markWrap.innerHTML = checkSVG;
+      feedbackText.textContent = 'Benar!';
+      feedbackText.className = 'feedback-text correct';
+    } else {
+      input.className = 'answer-input wrong';
+      markWrap.innerHTML = crossSVG;
+      feedbackText.textContent = 'Kurang tepat. Jawaban: ' + correctAnswer;
+      feedbackText.className = 'feedback-text wrong';
+    }
+
+    scoreLabel.textContent = 'Benar: ' + score;
+    progressFill.style.width = ((index + 1) / TOTAL * 100) + '%';
+    actionBtn.textContent = (index + 1 < TOTAL) ? 'Lanjut' : 'Lihat Hasil';
+  }
+
+  function nextOrAdvance(){
+    if(!awaitingNext){ checkAnswer(); return; }
+    index++;
+    if(index >= TOTAL){ showDone(); } else { renderProblem(); }
+  }
+
+  function skip(){
+    if(index + 1 >= TOTAL){ index++; showDone(); }
+    else { index++; renderProblem(); }
+  }
+
+  function restartQuiz(){
+    index = 0;
+    score = 0;
+    quizScreen.style.display = 'block';
+    doneScreen.style.display = 'none';
+    renderProblem();
+  }
+
+  actionBtn.addEventListener('click', nextOrAdvance);
+  skipBtn.addEventListener('click', skip);
+  restartBtn.addEventListener('click', restartQuiz);
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); nextOrAdvance(); }
+  });
+
+  renderProblem();
+
+  const multTable = document.getElementById('multTable');
+  const checkTableBtn = document.getElementById('checkTableBtn');
+  const resetTableBtn = document.getElementById('resetTableBtn');
+  const tableScorePill = document.getElementById('tableScorePill');
+
+  function buildTable(){
+    let html = '<thead><tr><th class="corner">×</th>';
+    for(let b=1; b<=TOTAL_MAX; b++){ html += '<th>' + b + '</th>'; }
+    html += '</tr></thead><tbody>';
+    for(let a=1; a<=TOTAL_MAX; a++){
+      html += '<tr><th>' + a + '</th>';
+      for(let b=1; b<=TOTAL_MAX; b++){
+        html += '<td class="cell" data-a="' + a + '" data-b="' + b + '">' +
+                '<input type="text" inputmode="numeric" autocomplete="off" maxlength="4">' +
+                '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    multTable.innerHTML = html;
+  }
+
+  function checkTable(){
+    const cells = multTable.querySelectorAll('td.cell');
+    let correctCount = 0;
+
+    cells.forEach(function(cell){
+      const a = parseInt(cell.dataset.a, 10);
+      const b = parseInt(cell.dataset.b, 10);
+      const correctAnswer = a * b;
+      const inputEl = cell.querySelector('input');
+      const userVal = parseInt(inputEl.value, 10);
+
+      cell.classList.remove('correct', 'wrong');
+      const oldHint = cell.querySelector('.correct-hint');
+      if(oldHint) oldHint.remove();
+
+      if(userVal === correctAnswer){
+        cell.classList.add('correct');
+        correctCount++;
+      } else {
+        cell.classList.add('wrong');
+        const hint = document.createElement('span');
+        hint.className = 'correct-hint';
+        hint.textContent = correctAnswer;
+        cell.appendChild(hint);
+      }
+      inputEl.disabled = true;
+    });
+
+    tableScorePill.textContent = 'Benar: ' + correctCount + ' dari ' + cells.length;
+    tableScorePill.classList.add('show-correct');
+  }
+
+  function resetTable(){
+    buildTable();
+    tableScorePill.textContent = '\u00A0';
+    tableScorePill.classList.remove('show-correct');
+    const firstInput = multTable.querySelector('input');
+    if(firstInput) firstInput.focus();
+  }
+
+  checkTableBtn.addEventListener('click', checkTable);
+  resetTableBtn.addEventListener('click', resetTable);
+
+  buildTable();
+})();
+</script>
+
+</body>
+</html>
